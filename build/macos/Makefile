@@ -3,6 +3,7 @@ include ../../VERSION
 LIBWEBRTC = $(CURDIR)/webrtc-build/obj/libwebrtc.a
 BOOST = $(CURDIR)/boost-$(BOOST_VERSION)
 SDL2 = $(CURDIR)/sdl2-$(SDL2_VERSION)
+KVS_SDK = $(CURDIR)/amazon-kinesis-video-streams-webrtc-sdk-c/build/libkvsWebrtcClient.dylib
 
 ifeq ($(JOBS),)
 	JOBS := $(shell system_profiler SPHardwareDataType | grep "Total Number of Cores" |  awk '{split($$0,ary,":");print ary[2]}' | xargs)
@@ -12,7 +13,7 @@ ifeq ($(JOBS),)
 endif
 
 .PHONY: all
-all: $(LIBWEBRTC) $(BOOST) $(SDL2)
+all: $(KVS_SDK) $(LIBWEBRTC) $(BOOST) $(SDL2)
 
 .PHONY: clean
 clean:
@@ -64,3 +65,10 @@ $(SDL2):
 	../configure --disable-shared --prefix=$(CURDIR)/sdl2-$(SDL2_VERSION) && \
 	make && \
 	make install
+
+$(KVS_SDK):
+	source ../../script/docker.sh && \
+	setup_kvs_sdk master $(CURDIR) && \
+	cd $(CURDIR)/amazon-kinesis-video-streams-webrtc-sdk-c/build && \
+	cmake .. && \
+	make
