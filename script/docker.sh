@@ -247,27 +247,32 @@ function setup_sdl2() {
   fi
 }
 
-# 指定した Amazon Kinesis Video Streams WebRTC C SDK のバージョンをダウンロードして、make を実行できる状態にする
+# 指定した AWS SDK for C++ をダウンロードして、make を実行できる状態にする
 #
 # ソースコードは $2/source に配置されるので、ここに cd した上で make を実行してビルドすること
 #
 # 引数:
-#   $1: Amazon Kinesis Video Streams WebRTC C SDK のブランチ名（現状、master のみ）
+#   $1: AWS SDK for C++ のタグ、もしくはブランチ
 #   $2: 出力ディレクトリ
-function setup_kvs_sdk() {
-  local kvs_sdk_version=$1
+function setup_aws_sdk() {
+  local aws_sdk_version=$1
   local output_dir=$2
 
   mkdir -p $output_dir
   cd $output_dir || return 1
-  if [ ! -e amazon-kinesis-video-streams-webrtc-sdk-c ]; then
-    git clone --recursive https://github.com/awslabs/amazon-kinesis-video-streams-webrtc-sdk-c.git || return 1
+  if [ ! -e aws-sdk-cpp ]; then
+    git clone https://github.com/aws/aws-sdk-cpp.git
   fi
-  cd amazon-kinesis-video-streams-webrtc-sdk-c || return 
-  if [ ! -e build ]; then
-    mkdir build
-    cd build
+  cd aws-sdk-cpp || return 1
+  git reset HEAD --hard || return 1
+  git checkout master || return 1
+  git pull || return 1
+  git checkout $aws_sdk_version || return 1
+  
+  if [ -e build ]; then
+    rm -rf build
   fi
+  mkdir build
 }
 
 # ROS Kinetic 用のパッケージをインストールする

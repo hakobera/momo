@@ -1,5 +1,5 @@
-#ifndef KINESIS_VIDEO_STREAMS_CLIENT_
-#define KINESIS_VIDEO_STREAMS_CLIENT_
+#ifndef AWS_KINSIS_VIDEO_WEBSOCKET_CLIENT_
+#define AWS_KINSIS_VIDEO_WEBSOCKET_CLIENT_
 
 #include <algorithm>
 #include <boost/asio/io_context.hpp>
@@ -10,22 +10,22 @@
 #include <memory>
 #include <nlohmann/json.hpp>
 #include <string>
-#include <com/amazonaws/kinesis/video/webrtcclient/Include.h>
 
 #include "connection_settings.h"
 #include "rtc/manager.h"
 #include "rtc/messagesender.h"
 #include "url_parts.h"
 #include "watchdog.h"
+#include "ws/websocket.h"
 
-class KinesisVideoStreamsClient
-    : public std::enable_shared_from_this<KinesisVideoStreamsClient>,
+class AwsKinesisVideoWebsocketClient
+    : public std::enable_shared_from_this<AwsKinesisVideoWebsocketClient>,
       public RTCMessageSender {
   boost::asio::io_context& ioc_;
 
   boost::asio::ip::tcp::resolver resolver_;
 
-  std::unique_ptr<SIGNALING_CLIENT_HANDLE> handle_;
+  std::unique_ptr<Websocket> ws_;
 
   URLParts parts_;
 
@@ -43,9 +43,10 @@ class KinesisVideoStreamsClient
   bool has_is_exist_user_flag_;
 
   webrtc::PeerConnectionInterface::IceServers ice_servers_;
- 
+
  private:
-   void init() const;
+  bool parseURL(URLParts& parts) const;
+  boost::asio::ssl::context createSSLContext() const;
 
  public:
   webrtc::PeerConnectionInterface::IceConnectionState getRTCConnectionState()
@@ -53,7 +54,7 @@ class KinesisVideoStreamsClient
   std::shared_ptr<RTCConnection> getRTCConnection() const;
 
  public:
-  KinesisVideoStreamsClient(boost::asio::io_context& ioc,
+  AwsKinesisVideoWebsocketClient(boost::asio::io_context& ioc,
                        RTCManager* manager,
                        ConnectionSettings conn_settings);
   void reset();
@@ -115,4 +116,4 @@ class KinesisVideoStreamsClient
   void doSetDescription(webrtc::SdpType type);
 };
 
-#endif  // KINESIS_VIDEO_STREAMS_CLIENT_
+#endif  // AWS_KINSIS_VIDEO_WEBSOCKET_CLIENT_

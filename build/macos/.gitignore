@@ -4,7 +4,8 @@
 /boost*
 /sdl2
 /sdl2*
-/amazon-kinesis-video-streams-webrtc-sdk-c
+/aws-sdk-cpp
+/aws-sdk-cpp*
 /src
 /.cipd
 /.gclient

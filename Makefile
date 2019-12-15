@@ -160,7 +160,7 @@ else ifeq ($(PACKAGE_NAME),macos)
   USE_SDL2 ?= 1
   SDL2_ROOT ?= $(CURDIR)/build/macos/sdl2-$(SDL2_VERSION)
   BOOST_ROOT ?= $(CURDIR)/build/macos/boost-$(BOOST_VERSION)
-  KVS_SDK_ROOT ?= $(CURDIR)/build/macos/amazon-kinesis-video-streams-webrtc-sdk-c
+  AWS_SDK_ROOT ?= $(CURDIR)/build/macos/aws-sdk-cpp-$(AWS_SDK_VERSION)
   # CURDIR を付けると、ar に渡す時に引数が長すぎるって怒られたので、
   # 相対パスで指定する。
   WEBRTC_SRC_ROOT ?= build/macos/webrtc/src
@@ -438,22 +438,9 @@ ifeq ($(TARGET_OS),macos)
     -framework MetalKit \
     -framework OpenGL
 
-  CFLAGS += \
-    -I$(KVS_SDK_ROOT)/src/include \
-    -I$(KVS_SDK_ROOT)/open-source/local/include \
-    -I$(KVS_SDK_ROOT)/open-source/amazon-kinesis-video-streams-producer-sdk-cpp/kinesis-video-c-producer/src/include \
-    -I$(KVS_SDK_ROOT)/open-source/amazon-kinesis-video-streams-producer-sdk-cpp/kinesis-video-pic/src/client/include \
-    -I$(KVS_SDK_ROOT)/open-source/amazon-kinesis-video-streams-producer-sdk-cpp/kinesis-video-pic/src/common/include \
-    -I$(KVS_SDK_ROOT)/open-source/amazon-kinesis-video-streams-producer-sdk-cpp/kinesis-video-pic/src/heap/include \
-    -I$(KVS_SDK_ROOT)/open-source/amazon-kinesis-video-streams-producer-sdk-cpp/kinesis-video-pic/src/mkvgen/include \
-    -I$(KVS_SDK_ROOT)/open-source/amazon-kinesis-video-streams-producer-sdk-cpp/kinesis-video-pic/src/state/include \
-    -I$(KVS_SDK_ROOT)/open-source/amazon-kinesis-video-streams-producer-sdk-cpp/kinesis-video-pic/src/trace/include \
-    -I$(KVS_SDK_ROOT)/open-source/amazon-kinesis-video-streams-producer-sdk-cpp/kinesis-video-pic/src/utils/include \
-    -I$(KVS_SDK_ROOT)/open-source/amazon-kinesis-video-streams-producer-sdk-cpp/kinesis-video-pic/src/view/include
-  
-  LDFLAGS += \
-    -L$(KVS_SDK_ROOT)/build \
-    -L$(KVS_SDK_ROOT)/open-source/local/lib \
+  CFLAGS += -I$(AWS_SDK_ROOT)/include
+  LDFLAGS += -L$(AWS_SDK_ROOT)/lib
+  LDFLAGS += -laws-c-common -laws-cpp-sdk-core -laws-cpp-sdk-kinesisvideo
 
   ifeq ($(USE_SDL2),1)
     LDFLAGS += \
@@ -494,7 +481,7 @@ SOURCES += $(shell find src/rtc -name '*.cpp')
 SOURCES += $(shell find src/ayame -name '*.cpp')
 SOURCES += $(shell find src/sora -name '*.cpp')
 SOURCES += $(shell find src/ws -name '*.cpp')
-SOURCES += $(shell find src/kvs -name '*.cpp')
+SOURCES += $(shell find src/aws_kinesis_video -name '*.cpp')
 
 ifeq ($(USE_ROS),1)
   CFLAGS += -DHAVE_JPEG=1 -DUSE_ROS=1 -I$(SYSROOT)/opt/ros/$(ROS_VERSION)/include

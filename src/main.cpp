@@ -31,6 +31,7 @@
 #include "sdl_renderer/sdl_renderer.h"
 #endif
 
+#include "aws_kinesis_video/aws_kinesis_video_server.h"
 #include "ayame/ayame_server.h"
 #include "connection_settings.h"
 #include "p2p/p2p_server.h"
@@ -47,9 +48,10 @@ int main(int argc, char* argv[]) {
   bool use_test = false;
   bool use_ayame = false;
   bool use_sora = false;
+  bool use_aws_kinesis_video = false;
   int log_level = rtc::LS_NONE;
 
-  Util::parseArgs(argc, argv, is_daemon, use_test, use_ayame, use_sora,
+  Util::parseArgs(argc, argv, is_daemon, use_test, use_aws_kinesis_video, use_ayame, use_sora,
                   log_level, cs);
 
 #ifndef _MSC_VER
@@ -140,6 +142,14 @@ int main(int argc, char* argv[]) {
           boost::asio::ip::make_address("127.0.0.1"),
           static_cast<unsigned short>(cs.port)};
       std::make_shared<AyameServer>(ioc, endpoint, rtc_manager.get(), cs)
+          ->run();
+    }
+
+    if (use_aws_kinesis_video) {
+      const boost::asio::ip::tcp::endpoint endpoint{
+          boost::asio::ip::make_address("127.0.0.1"),
+          static_cast<unsigned short>(cs.port)};
+      std::make_shared<AwsKinesisVideoServer>(ioc, endpoint, rtc_manager.get(), cs)
           ->run();
     }
 

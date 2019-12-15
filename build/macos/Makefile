@@ -3,7 +3,7 @@ include ../../VERSION
 LIBWEBRTC = $(CURDIR)/webrtc-build/obj/libwebrtc.a
 BOOST = $(CURDIR)/boost-$(BOOST_VERSION)
 SDL2 = $(CURDIR)/sdl2-$(SDL2_VERSION)
-KVS_SDK = $(CURDIR)/amazon-kinesis-video-streams-webrtc-sdk-c/build/libkvsWebrtcClient.dylib
+AWS_SDK = $(CURDIR)/aws-sdk-cpp-$(AWS_SDK_VERSION)
 
 ifeq ($(JOBS),)
 	JOBS := $(shell system_profiler SPHardwareDataType | grep "Total Number of Cores" |  awk '{split($$0,ary,":");print ary[2]}' | xargs)
@@ -13,7 +13,8 @@ ifeq ($(JOBS),)
 endif
 
 .PHONY: all
-all: $(KVS_SDK) $(LIBWEBRTC) $(BOOST) $(SDL2)
+#all: $(AWS_SDK) $(LIBWEBRTC) $(BOOST) $(SDL2)
+all: $(AWS_SDK)
 
 .PHONY: clean
 clean:
@@ -23,6 +24,8 @@ clean:
 	rm -rf boost-*
 	rm -rf sdl2
 	rm -rf sdl2-*
+	rm -rf aws-sdk-cpp
+	rm -rf aws-sdk-cpp-*
 
 .PHONY: check
 check:
@@ -66,9 +69,10 @@ $(SDL2):
 	make && \
 	make install
 
-$(KVS_SDK):
+$(AWS_SDK):
 	source ../../script/docker.sh && \
-	setup_kvs_sdk master $(CURDIR) && \
-	cd $(CURDIR)/amazon-kinesis-video-streams-webrtc-sdk-c/build && \
-	cmake .. && \
-	make
+	setup_aws_sdk master $(CURDIR) && \
+	cd $(CURDIR)/aws-sdk-cpp/build && \
+	cmake -DBUILD_ONLY="kinesisvideo;kinesis-video-signaling" -DBUILD_SHARED_LIBS=OFF -DCPP_STANDARD=14 -DENABLE_TESTING=OFF -DCMAKE_INSTALL_PREFIX=$(AWS_SDK) -DCMAKE_PREFIX_PATH=$(AWS_SDK) .. && \
+	make -j$(JOBS) && \
+	make install

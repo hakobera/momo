@@ -52,6 +52,8 @@ struct ConnectionSettings {
   std::string ayame_client_id = "";
   std::string ayame_signaling_key = "";
 
+  std::string aws_kinesis_video_signaling_channel_arn;
+
   bool disable_echo_cancellation = false;
   bool disable_auto_gain_control = false;
   bool disable_noise_suppression = false;
@@ -108,6 +110,7 @@ struct ConnectionSettings {
        << "\n";
     os << "priority: " << cs.priority << "\n";
     os << "port: " << cs.port << "\n";
+    os << "aws_kinesis_video_signaling_channel_arn" << cs.aws_kinesis_video_signaling_channel_arn << "\n";
     os << "ayame_signaling_host: " << cs.ayame_signaling_host << "\n";
     os << "ayame_room_id: " << cs.ayame_room_id << "\n";
     os << "ayame_client_id: " << cs.ayame_client_id << "\n";

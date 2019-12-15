@@ -39,6 +39,7 @@ void Util::parseArgs(int argc,
                      char* argv[],
                      bool& is_daemon,
                      bool& use_test,
+                     bool& use_aws_kinesis_video,
                      bool& use_ayame,
                      bool& use_sora,
                      int& log_level,
@@ -53,6 +54,7 @@ void Util::parseArgs(int argc,
   local_nh.param<bool>("compressed", cs.image_compressed, cs.image_compressed);
 
   local_nh.param<bool>("use_test", use_test, use_test);
+  local_nh.param<bool>("use_aws_kinesis_video", use_aws_kinesis_video, use_aws_kinesis_video);
   local_nh.param<bool>("use_ayame", use_ayame, use_ayame);
   local_nh.param<bool>("use_sora", use_sora, use_sora);
 
@@ -115,6 +117,8 @@ void Util::parseArgs(int argc,
         cs.ayame_client_id);
     local_nh.param<std::string>("signaling_key", cs.ayame_signaling_key,
                                 cs.ayame_signaling_key);
+  } else if (use_aws_kinesis_video && local_nh.hasParam("SIGNALING_CHANNEL_ARN") {
+    local_nh.getParam("SIGNALNG_CHANNEL_ARN", cs.aws_kinesis_video_signaling_channel_arn);
   } else {
     exit(1);
   }
@@ -126,6 +130,7 @@ void Util::parseArgs(int argc,
                      char* argv[],
                      bool& is_daemon,
                      bool& use_test,
+                     bool& use_aws_kinesis_video,
                      bool& use_ayame,
                      bool& use_sora,
                      int& log_level,
@@ -219,12 +224,16 @@ void Util::parseArgs(int argc,
                "タイピングディテクション無効");
 
   auto test_app = app.add_subcommand("test", "開発向け");
+  auto aws_kinesis_video_app = app.add_subcommand("aws_kinesis_video", "Amazon Kinesis Video Streams");
   auto ayame_app = app.add_subcommand("ayame", "WebRTC Signaling Server Ayame");
   auto sora_app = app.add_subcommand("sora", "WebRTC SFU Sora");
 
   test_app
       ->add_option("--document-root", cs.test_document_root, "配信ディレクトリ")
       ->check(CLI::ExistingDirectory);
+
+  aws_kinesis_video_app
+      ->add_option("SIGNALING-CHANNEL-ARN", cs.aws_kinesis_video_signaling_channel_arn, "シグナリングチャネル ARN");
 
   ayame_app
       ->add_option("SIGNALING-URL", cs.ayame_signaling_host,
@@ -300,7 +309,7 @@ void Util::parseArgs(int argc,
     exit(0);
   }
 
-  if (!test_app->parsed() && !sora_app->parsed() && !ayame_app->parsed()) {
+  if (!test_app->parsed() && !sora_app->parsed() && !ayame_app->parsed() && !aws_kinesis_video_app->parsed()) {
     std::cout << app.help() << std::endl;
     exit(1);
   }
@@ -315,6 +324,10 @@ void Util::parseArgs(int argc,
 
   if (ayame_app->parsed()) {
     use_ayame = true;
+  }
+
+  if (aws_kinesis_video_app->parsed()) {
+    use_aws_kinesis_video = true;
   }
 }
 

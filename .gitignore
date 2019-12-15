@@ -37,6 +37,8 @@ core
 *.tar.gz
 webrtc_logs_0
 .DS_Store
+.env
+.python-version
 
 /libs/CLI11-*
 /libs/json-*

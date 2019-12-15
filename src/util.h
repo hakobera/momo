@@ -13,6 +13,7 @@ class Util {
                         char* argv[],
                         bool& is_daemon,
                         bool& use_test,
+                        bool& use_aws_kinesis_video,
                         bool& use_ayame,
                         bool& use_sora,
                         int& log_level,
