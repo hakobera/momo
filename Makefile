@@ -440,7 +440,7 @@ ifeq ($(TARGET_OS),macos)
 
   CFLAGS += -I$(AWS_SDK_ROOT)/include
   LDFLAGS += -L$(AWS_SDK_ROOT)/lib
-  LDFLAGS += -laws-c-common -laws-cpp-sdk-core -laws-cpp-sdk-kinesisvideo
+  LDFLAGS += -lcurl -laws-c-common -laws-c-event-stream -laws-checksums -laws-cpp-sdk-core -laws-cpp-sdk-kinesisvideo
 
   ifeq ($(USE_SDL2),1)
     LDFLAGS += \
