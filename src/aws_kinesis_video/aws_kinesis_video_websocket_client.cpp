@@ -1,9 +1,15 @@
 #include "aws_kinesis_video_websocket_client.h"
 
+#include <cctype>
+#include <iomanip>
+#include <sstream>
+#include <string>
+
 #include <boost/beast/websocket/stream.hpp>
 #include <nlohmann/json.hpp>
 
 #include <aws/core/Aws.h>
+#include <aws/core/auth/AWSCredentialsProviderChain.h>
 #include <aws/core/client/AWSError.h>
 #include <aws/core/client/ClientConfiguration.h>
 #include <aws/core/utils/Outcome.h>
@@ -18,6 +24,7 @@
 #include <aws/kinesisvideo/KinesisVideoClient.h>
 #include <aws/kinesisvideo/KinesisVideoErrors.h>
 
+#include "aws_wss_auth_signer.h"
 #include "url_parts.h"
 #include "util.h"
 
@@ -34,7 +41,7 @@ bool AwsKinesisVideoWebsocketClient::parseURL(URLParts& parts) const {
     Aws::KinesisVideo::KinesisVideoClient kvs_client(clientConfig);
 
     std::string s = conn_settings_.aws_kinesis_video_signaling_channel_arn;
-    Aws::String channel_arn(s.c_str(), s.size());
+    const Aws::String channel_arn(s.c_str(), s.size());
 
     Aws::KinesisVideo::Model::SingleMasterChannelEndpointConfiguration config;
     Aws::Vector<Aws::KinesisVideo::Model::ChannelProtocol> protocols = { Aws::KinesisVideo::Model::ChannelProtocol::WSS };
@@ -47,11 +54,13 @@ bool AwsKinesisVideoWebsocketClient::parseURL(URLParts& parts) const {
 
     Aws::KinesisVideo::Model::GetSignalingChannelEndpointOutcome resp = kvs_client.GetSignalingChannelEndpoint(req);
     if (resp.IsSuccess()) {
-      Aws::String const& endpoint = resp.GetResult().GetResourceEndpointList().at(0).GetResourceEndpoint();
-      url = std::string(endpoint.c_str(), endpoint.size());
+      auto credentialsProvider = std::shared_ptr<Aws::Auth::AWSCredentialsProvider>(new Aws::Auth::DefaultAWSCredentialsProviderChain());
+      const Aws::String& endpoint = resp.GetResult().GetResourceEndpointList().at(0).GetResourceEndpoint();
+      auto signer = std::shared_ptr<AwsWssAuthSigner>(new AwsWssAuthSigner(credentialsProvider, clientConfig.region));
+      url = signer->GenerateSignedURL(endpoint, channel_arn);
       RTC_LOG(LS_INFO) << __FUNCTION__ << " signaling url = " << url;
     } else {
-      RTC_LOG(LS_ERROR) << __FUNCTION__ << "what :" << resp.GetError();
+      RTC_LOG(LS_ERROR) << __FUNCTION__ << " what :" << resp.GetError();
     }
   }
   Aws::ShutdownAPI(options);
@@ -153,6 +162,7 @@ bool AwsKinesisVideoWebsocketClient::connect() {
   }
 
   // DNS ルックアップ
+  RTC_LOG(LS_INFO) << "connect: " << parts_.host;
   resolver_.async_resolve(
       parts_.host, port,
       boost::asio::bind_executor(
