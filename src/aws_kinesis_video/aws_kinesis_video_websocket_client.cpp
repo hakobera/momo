@@ -74,7 +74,7 @@ bool AwsKinesisVideoWebsocketClient::parseURL(URLParts& parts) {
     }
 
     webrtc::PeerConnectionInterface::IceServer ice_server;
-    ice_server.uri = std::string("stun:stun.kinesisvideo").append(clientConfig.region).append(".amazonaws.com:443");
+    ice_server.uri = std::string("stun:stun.kinesisvideo.").append(clientConfig.region).append(".amazonaws.com:443");
     ice_servers_.push_back(ice_server);
   }
   Aws::ShutdownAPI(options);
