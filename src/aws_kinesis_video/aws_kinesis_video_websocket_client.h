@@ -39,13 +39,12 @@ class AwsKinesisVideoWebsocketClient
   WatchDog watchdog_;
 
   bool connected_;
-  bool is_send_offer_;
-  bool has_is_exist_user_flag_;
+  std::string client_id_;
 
   webrtc::PeerConnectionInterface::IceServers ice_servers_;
-
+  
  private:
-  bool parseURL(URLParts& parts) const;
+  bool parseURL(URLParts& parts);
   boost::asio::ssl::context createSSLContext() const;
 
  public:
@@ -79,8 +78,6 @@ class AwsKinesisVideoWebsocketClient
   void onSSLHandshake(boost::system::error_code ec);
   void onConnect(boost::system::error_code ec);
   void onHandshake(boost::system::error_code ec);
-  void doRegister();
-  void doSendPong();
   void setIceServersFromConfig(nlohmann::json json_message);
   void createPeerConnection();
 

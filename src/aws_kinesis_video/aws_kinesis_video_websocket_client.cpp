@@ -12,7 +12,10 @@
 #include <aws/core/auth/AWSCredentialsProviderChain.h>
 #include <aws/core/client/AWSError.h>
 #include <aws/core/client/ClientConfiguration.h>
+#include <aws/core/utils/DateTime.h>
+#include <aws/core/utils/HashingUtils.h>
 #include <aws/core/utils/Outcome.h>
+#include <aws/core/utils/crypto/SecureRandom.h>
 #include <aws/core/utils/memory/stl/AWSString.h>
 #include <aws/core/utils/memory/stl/AWSVector.h>
 #include <aws/kinesisvideo/model/GetSignalingChannelEndpointRequest.h>
@@ -30,8 +33,16 @@
 
 using json = nlohmann::json;
 
-bool AwsKinesisVideoWebsocketClient::parseURL(URLParts& parts) const {
+static const char* MESSAGE_TYPE_SDP_ANSWER    = "SDP_ANSWER";
+static const char* MESSAGE_TYPE_SDP_OFFER     = "SDP_OFFER";
+static const char* MESSAGE_TYPE_ICE_CANDIDATE = "ICE_CANDIDATE";
+static const char* MESSAGE_TYPE_STATUS_RESPONSE = "STATUS_RESPONSE";
+
+static const char* DEFAULT_CLIENT_ID = "MASTER";
+
+bool AwsKinesisVideoWebsocketClient::parseURL(URLParts& parts) {
   std::string url = "";
+  std::string s = conn_settings_.aws_kinesis_video_signaling_channel_arn;
 
   Aws::SDKOptions options;
   Aws::InitAPI(options);
@@ -40,7 +51,6 @@ bool AwsKinesisVideoWebsocketClient::parseURL(URLParts& parts) const {
     clientConfig.region = Aws::Region::AP_NORTHEAST_1; // TODO: get from env or parameter
     Aws::KinesisVideo::KinesisVideoClient kvs_client(clientConfig);
 
-    std::string s = conn_settings_.aws_kinesis_video_signaling_channel_arn;
     const Aws::String channel_arn(s.c_str(), s.size());
 
     Aws::KinesisVideo::Model::SingleMasterChannelEndpointConfiguration config;
@@ -62,6 +72,10 @@ bool AwsKinesisVideoWebsocketClient::parseURL(URLParts& parts) const {
     } else {
       RTC_LOG(LS_ERROR) << __FUNCTION__ << " what :" << resp.GetError();
     }
+
+    webrtc::PeerConnectionInterface::IceServer ice_server;
+    ice_server.uri = std::string("stun:stun.kinesisvideo").append(clientConfig.region).append(".amazonaws.com:443");
+    ice_servers_.push_back(ice_server);
   }
   Aws::ShutdownAPI(options);
 
@@ -119,9 +133,8 @@ AwsKinesisVideoWebsocketClient::AwsKinesisVideoWebsocketClient(boost::asio::io_c
 void AwsKinesisVideoWebsocketClient::reset() {
   connection_ = nullptr;
   connected_ = false;
-  is_send_offer_ = false;
-  has_is_exist_user_flag_ = false;
   ice_servers_.clear();
+  client_id_.clear();
 
   if (parseURL(parts_)) {
     auto ssl_ctx = createSSLContext();
@@ -170,7 +183,8 @@ bool AwsKinesisVideoWebsocketClient::connect() {
           std::bind(&AwsKinesisVideoWebsocketClient::onResolve, shared_from_this(),
                     std::placeholders::_1, std::placeholders::_2)));
 
-  watchdog_.enable(30);
+  //watchdog_.enable(30);
+  watchdog_.disable();
 
   return true;
 }
@@ -271,30 +285,11 @@ void AwsKinesisVideoWebsocketClient::onHandshake(boost::system::error_code ec) {
                              std::placeholders::_1, std::placeholders::_2,
                              std::placeholders::_3));
 
-  doRegister();
-}
-
-void AwsKinesisVideoWebsocketClient::doRegister() {
-  json json_message = {
-      {"type", "register"},
-      {"clientId", Util::generateRandomChars()},
-      {"roomId", conn_settings_.ayame_room_id},
-  };
-  if (conn_settings_.ayame_client_id != "") {
-    json_message["clientId"] = conn_settings_.ayame_client_id;
-  }
-  if (conn_settings_.ayame_signaling_key != "") {
-    json_message["key"] = conn_settings_.ayame_signaling_key;
-  }
-  ws_->sendText(json_message.dump());
-}
-
-void AwsKinesisVideoWebsocketClient::doSendPong() {
-  json json_message = {{"type", "pong"}};
-  ws_->sendText(json_message.dump());
+  createPeerConnection();
 }
 
 void AwsKinesisVideoWebsocketClient::setIceServersFromConfig(json json_message) {
+  // TODO: KinesisVideo の GetICEServerConfig API を呼ぶ実装に変える
   // 返却されてきた iceServers を セットする
   if (json_message.contains("iceServers")) {
     auto jservers = json_message["iceServers"];
@@ -371,51 +366,49 @@ void AwsKinesisVideoWebsocketClient::onRead(boost::system::error_code ec,
 
   RTC_LOG(LS_INFO) << __FUNCTION__ << ": text=" << text;
 
-  auto json_message = json::parse(text);
-  const std::string type = json_message["type"];
-  if (type == "accept") {
-    setIceServersFromConfig(json_message);
+  json json_message;
+  try {
+    json_message = json::parse(text);
+  } catch (json::parse_error& e) {
+    return;
+  }
+
+  auto base64_message_payload_text = json_message["messagePayload"];
+  auto decoded_message_payload = Aws::Utils::HashingUtils::Base64Decode(base64_message_payload_text);
+  std::string message_payload_text((char*)decoded_message_payload.GetUnderlyingData(), decoded_message_payload.GetLength());
+  
+  RTC_LOG(LS_INFO) << __FUNCTION__ << ": message_payload_text=" << message_payload_text;
+
+  json json_payload;
+  try {
+    json_payload = json::parse(message_payload_text);
+  } catch (json::parse_error& e) {
+    return;
+  }
+  
+  const std::string type = json_message["messageType"];
+  const std::string sender_client_id = json_message.value("senderClientId", "");
+
+  RTC_LOG(LS_INFO) << __FUNCTION__ << ": message_type=" << type << ", client_id=" << sender_client_id;
+
+  if (type == MESSAGE_TYPE_SDP_OFFER) {
     createPeerConnection();
-    // isExistUser フラグが存在するか確認する
-    auto is_exist_user = false;
-    if (json_message.contains("isExistUser")) {
-      has_is_exist_user_flag_ = true;
-      is_exist_user = json_message["isExistUser"];
-    }
-    // isExistUser フラグが存在してかつ true な場合 offer SDP を生成して送信する
-    if (is_exist_user) {
-      RTC_LOG(LS_INFO) << __FUNCTION__ << ": exist_user";
-      is_send_offer_ = true;
-      connection_->createOffer();
-    } else if (!has_is_exist_user_flag_) {
-      // フラグがない場合とりあえず送信
-      connection_->createOffer();
-    }
-  } else if (type == "offer") {
-    // isExistUser フラグがなかった場合二回 peer connection を生成する
-    if (!has_is_exist_user_flag_) {
-      createPeerConnection();
-    }
-    const std::string sdp = json_message["sdp"];
+    client_id_.assign(sender_client_id);
+    const std::string sdp = json_payload["sdp"];
     connection_->setOffer(sdp);
-  } else if (type == "answer") {
-    const std::string sdp = json_message["sdp"];
+    //is_send_offer_ = true;
+  } else if (type == MESSAGE_TYPE_SDP_ANSWER) {
+    const std::string sdp = json_payload["sdp"];
     connection_->setAnswer(sdp);
-  } else if (type == "candidate") {
+  } else if (type == MESSAGE_TYPE_ICE_CANDIDATE) {
     int sdp_mlineindex = 0;
     std::string sdp_mid, candidate;
-    json ice = json_message["ice"];
-    sdp_mid = ice["sdpMid"];
-    sdp_mlineindex = ice["sdpMLineIndex"];
-    candidate = ice["candidate"];
+    sdp_mid = json_payload["sdpMid"];
+    sdp_mlineindex = json_payload["sdpMLineIndex"];
+    candidate = json_payload["candidate"];
     connection_->addIceCandidate(sdp_mid, sdp_mlineindex, candidate);
-  } else if (type == "ping") {
-    if (rtc_state_ != webrtc::PeerConnectionInterface::IceConnectionState::
-                          kIceConnectionConnected) {
-      return;
-    }
-    watchdog_.reset();
-    doSendPong();
+  } else if (type == MESSAGE_TYPE_STATUS_RESPONSE) {
+    // do nothing
   }
 }
 
@@ -431,14 +424,25 @@ void AwsKinesisVideoWebsocketClient::onIceConnectionStateChange(
 void AwsKinesisVideoWebsocketClient::onIceCandidate(const std::string sdp_mid,
                                           const int sdp_mlineindex,
                                           const std::string sdp) {
-  // ayame では candidate sdp の交換で `ice` プロパティを用いる。 `candidate` ではないので注意
-  json json_message = {
-      {"type", "candidate"},
+  json json_payload = {
+    {"candidate", sdp},
+    {"sdpMLineIndex", sdp_mlineindex},
+    {"sdpMid", sdp_mid}
   };
-  // ice プロパティの中に object で candidate 情報をセットして送信する
-  json_message["ice"] = {{"candidate", sdp},
-                         {"sdpMLineIndex", sdp_mlineindex},
-                         {"sdpMid", sdp_mid}};
+
+  std::string payload = json_payload.dump();
+  std::string base64_payload = Aws::Utils::HashingUtils::Base64Encode(Aws::Utils::ByteBuffer((unsigned char*)payload.c_str(), payload.length()));
+
+  json json_message = {
+    {"action", MESSAGE_TYPE_ICE_CANDIDATE},
+    {"recipientClientId", client_id_},
+    {"messagePayload", base64_payload},
+    {"correlationId", Aws::Utils::DateTime::CalculateGmtTimeWithMsPrecision()}
+  };
+
+  RTC_LOG(LS_INFO) << __FUNCTION__ << payload;
+  RTC_LOG(LS_INFO) << __FUNCTION__ << json_message.dump();
+
   ws_->sendText(json_message.dump());
 }
 
@@ -446,7 +450,25 @@ void AwsKinesisVideoWebsocketClient::onCreateDescription(webrtc::SdpType type,
                                                const std::string sdp) {
   RTC_LOG(LS_INFO) << __FUNCTION__
                    << " SdpType: " << webrtc::SdpTypeToString(type);
-  json json_message = {{"type", webrtc::SdpTypeToString(type)}, {"sdp", sdp}};
+
+  json json_payload = {
+    {"type", webrtc::SdpTypeToString(type)},
+    {"sdp", sdp}
+  };
+
+  std::string payload = json_payload.dump();
+  std::string base64_payload = Aws::Utils::HashingUtils::Base64Encode(Aws::Utils::ByteBuffer((unsigned char*)payload.c_str(), payload.length()));
+
+  json json_message = {
+    {"action", MESSAGE_TYPE_SDP_ANSWER},
+    {"recipientClientId", client_id_},
+    {"messagePayload", base64_payload},
+    {"correlationId", Aws::Utils::DateTime::CalculateGmtTimeWithMsPrecision()}
+  };
+
+  RTC_LOG(LS_INFO) << __FUNCTION__ << payload;
+  RTC_LOG(LS_INFO) << __FUNCTION__ << json_message.dump();
+
   ws_->sendText(json_message.dump());
 }
 
@@ -482,9 +504,6 @@ void AwsKinesisVideoWebsocketClient::doIceConnectionStateChange(
 
 void AwsKinesisVideoWebsocketClient::doSetDescription(webrtc::SdpType type) {
   if (type == webrtc::SdpType::kOffer) {
-    if (!is_send_offer_ || !has_is_exist_user_flag_) {
-      connection_->createAnswer();
-    }
-    is_send_offer_ = false;
+    connection_->createAnswer();
   }
 }
