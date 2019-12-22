@@ -43,6 +43,7 @@ static const char* DEFAULT_CLIENT_ID = "MASTER";
 bool AwsKinesisVideoWebsocketClient::parseURL(URLParts& parts) {
   std::string url = "";
   std::string s = conn_settings_.aws_kinesis_video_signaling_channel_arn;
+  RTC_LOG(LS_INFO) << __FUNCTION__ << " channel ARN = " << s;
 
   Aws::SDKOptions options;
   Aws::InitAPI(options);
