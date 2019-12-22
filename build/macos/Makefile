@@ -13,8 +13,7 @@ ifeq ($(JOBS),)
 endif
 
 .PHONY: all
-#all: $(AWS_SDK) $(LIBWEBRTC) $(BOOST) $(SDL2)
-all: $(AWS_SDK)
+all: $(AWS_SDK) $(LIBWEBRTC) $(BOOST) $(SDL2)
 
 .PHONY: clean
 clean:
