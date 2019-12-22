@@ -42,6 +42,7 @@ jobs:
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v1
+      - run: brew install cmake
       - run: make macos
         working-directory: build
         timeout-minutes: 120
