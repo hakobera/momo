@@ -42,6 +42,8 @@ include VERSION
 #
 # CLI11_ROOT: CLI11 のインストール先ディレクトリ
 #
+# AWS_SDK_ROOT: AWS SDK for C++ のインストール先ディレクトリ
+#
 # WEBRTC_INCLUDE_DIR: WebRTC のインクルードディレクトリ
 #
 # WEBRTC_LIB_ROOT: WebRTC のビルドディレクトリ
@@ -77,6 +79,7 @@ ifeq ($(PACKAGE_NAME),raspbian-buster_armv6)
   BOOST_ROOT ?= /root/boost
   JSON_ROOT ?= /root/json
   CLI11_ROOT ?= /root/CLI11
+  AWS_SDK_ROOT ?= /root/aws-sdk-cpp
   WEBRTC_INCLUDE_DIR ?= /root/webrtc/include
   WEBRTC_LIBRARY_DIR ?= /root/webrtc/lib
   USE_LIBCXX ?= 1
@@ -95,6 +98,7 @@ else ifeq ($(PACKAGE_NAME),raspbian-buster_armv7)
   BOOST_ROOT ?= /root/boost
   JSON_ROOT ?= /root/json
   CLI11_ROOT ?= /root/CLI11
+  AWS_SDK_ROOT ?= /root/aws-sdk-cpp
   WEBRTC_INCLUDE_DIR ?= /root/webrtc/include
   WEBRTC_LIBRARY_DIR ?= /root/webrtc/lib
   USE_LIBCXX ?= 1
@@ -113,6 +117,7 @@ else ifeq ($(PACKAGE_NAME),ubuntu-16.04_armv7_ros)
   BOOST_ROOT ?= /root/boost
   JSON_ROOT ?= /root/json
   CLI11_ROOT ?= /root/CLI11
+  AWS_SDK_ROOT ?= /root/aws-sdk-cpp
   WEBRTC_INCLUDE_DIR ?= /root/webrtc/include
   WEBRTC_LIBRARY_DIR ?= /root/webrtc/lib
   USE_LIBCXX ?= 0
@@ -130,6 +135,7 @@ else ifeq ($(PACKAGE_NAME),ubuntu-18.04_armv8)
   BOOST_ROOT ?= /root/boost
   JSON_ROOT ?= /root/json
   CLI11_ROOT ?= /root/CLI11
+  AWS_SDK_ROOT ?= /root/aws-sdk-cpp
   WEBRTC_INCLUDE_DIR ?= /root/webrtc/include
   WEBRTC_LIBRARY_DIR ?= /root/webrtc/lib
   USE_LIBCXX ?= 1
@@ -149,6 +155,7 @@ else ifeq ($(PACKAGE_NAME),ubuntu-18.04_armv8_jetson_nano)
   BOOST_ROOT ?= /root/boost
   JSON_ROOT ?= /root/json
   CLI11_ROOT ?= /root/CLI11
+  AWS_SDK_ROOT ?= /root/aws-sdk-cpp
   WEBRTC_INCLUDE_DIR ?= /root/webrtc/include
   WEBRTC_LIBRARY_DIR ?= /root/webrtc/lib
   USE_LIBCXX ?= 1
@@ -166,6 +173,7 @@ else ifeq ($(PACKAGE_NAME),ubuntu-16.04_x86_64_ros)
   BOOST_ROOT ?= /root/boost
   JSON_ROOT ?= /root/json
   CLI11_ROOT ?= /root/CLI11
+  AWS_SDK_ROOT ?= /root/aws-sdk-cpp
   WEBRTC_INCLUDE_DIR ?= /root/webrtc/include
   WEBRTC_LIBRARY_DIR ?= /root/webrtc/lib
   USE_LIBCXX ?= 0
@@ -181,6 +189,7 @@ else ifeq ($(PACKAGE_NAME),ubuntu-18.04_x86_64)
   BOOST_ROOT ?= /root/boost
   JSON_ROOT ?= /root/json
   CLI11_ROOT ?= /root/CLI11
+  AWS_SDK_ROOT ?= /root/aws-sdk-cpp
   WEBRTC_INCLUDE_DIR ?= /root/webrtc/include
   WEBRTC_LIBRARY_DIR ?= /root/webrtc/lib
   USE_LIBCXX ?= 1
@@ -560,14 +569,16 @@ LDFLAGS += -L$(BOOST_ROOT)/lib -lboost_filesystem
 # Boost.Beast で BoringSSL を使うので、そのあたりも追加する
 CFLAGS += -I$(WEBRTC_INCLUDE_DIR)/third_party/boringssl/src/include -DOPENSSL_IS_BORINGSSL
 
-# kvs WebRTC SDK
-CFLAGS += -I$(BUILD_ROOT)/
-
 # JSON
 CFLAGS += -I$(JSON_ROOT)/include
 
 # CLI11
 CFLAGS += -I$(CLI11_ROOT)/include
+
+# AWS SDK
+CFLAGS += -I$(AWS_SDK_ROOT)/include
+LDFLAGS += -L$(AWS_SDK_ROOT)/lib
+LDFLAGS += -lcurl -laws-c-common -laws-c-event-stream -laws-checksums -laws-cpp-sdk-core -laws-cpp-sdk-kinesisvideo
 
 # パッケージ用のフラグ
 ifeq ($(BUILD_MODE),package)

@@ -10,9 +10,11 @@ dpkg-reconfigure -f noninteractive tzdata
 
 apt-get -y install \
   build-essential \
+  cmake \
   curl \
   git \
   libasound2-dev \
+  libcurl4-openssl-dev \
   libc6-dev \
   libexpat1-dev \
   libgtk-3-dev \

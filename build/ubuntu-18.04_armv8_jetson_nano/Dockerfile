@@ -105,3 +105,15 @@ RUN git clone --branch v$JSON_VERSION --depth 1 https://github.com/nlohmann/json
 
 ARG CLI11_VERSION
 RUN git clone --branch v$CLI11_VERSION --depth 1 https://github.com/CLIUtils/CLI11.git /root/CLI11
+
+# AWS SDK のビルド
+ARG AWS_SDK_VERSION
+COPY script/setup_aws_sdk.sh /root/
+RUN \
+  set -ex \
+  && /root/setup_aws_sdk.sh "$AWS_SDK_VERSION" /root/aws-sdk-cpp-source \
+  && mkdir -p /root/aws-sdk-cpp-source/build \
+  && cd /root/aws-sdk-cpp-source/build \
+  && cmake -DBUILD_ONLY="kinesisvideo" -DBUILD_SHARED_LIBS=OFF -DCPP_STANDARD=14 -DENABLE_TESTING=OFF -DCMAKE_INSTALL_PREFIX=/root/aws-sdk-cpp ../aws-sdk-cpp \
+  && make \
+  && make install

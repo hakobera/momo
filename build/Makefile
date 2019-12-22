@@ -99,6 +99,7 @@ $(1).prepare:
 		--build-arg SDL2_VERSION=$$(SDL2_VERSION) \
 		--build-arg JSON_VERSION=$$(JSON_VERSION) \
 		--build-arg CLI11_VERSION=$$(CLI11_VERSION) \
+		--build-arg AWS_SDK_VERSION=$$(AWS_SDK_VERSION) \
 		--build-arg PACKAGE_NAME=$(1) \
 		$(1)
 
