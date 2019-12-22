@@ -6,6 +6,9 @@
 /sdl2*
 /aws-sdk-cpp
 /aws-sdk-cpp*
+/CLI11
+/json
+/llvm
 /src
 /.cipd
 /.gclient

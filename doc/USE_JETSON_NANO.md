@@ -2,9 +2,24 @@
 
 ## Jetson Nano を購入する
 
-**スイッチサイエンスからの購入をおすすめします**
-
-[Jetson Nano 開発者キット \- スイッチサイエンス](https://www.switch-science.com/catalog/5433/)
+- [Jetson Nano 開発者キット](https://www.switch-science.com/catalog/5433/)
+    - Jetson Nano 本体はこちらがおすすめ
+    - スイッチサイエンス
+- [【OLIOSPECオリジナル】NVIDIA Jetson Nano Developer kit用ケース\(長尾製作所製\)](https://www.oliospec.com/shopdetail/000000008491/)
+    - ケースはこちらがおすすめ
+    - OLIOSPEC
+- [Micron MTSD032AHC6MS\-1WT 32GB 産業用microSDカード](https://www.oliospec.com/shop/shopdetail.html?brandcode=000000007374)
+    - SD カードはこちらがおすすめ
+    - OLIOSPEC
+- [Noctua NF-A4x10 5V PWMサイレントファン40 mmプレミアムブラウン/ベージュ](https://amazon.co.jp/dp/B07DXS86G7)
+    - ファンはこちらがおすすめ
+    - Amazon
+- [２４Ｗ級スイッチングＡＣアダプター５Ｖ４Ａ　ＧＦ２４－ＵＳ０５４０](http://akizukidenshi.com/catalog/g/gM-09594/)
+    - 電源はこちらがおすすめ
+    - 秋月電子通商
+- [つまみ付ジャンパーピン（緑）（２．５４ｍｍピッチ）（２０個入）](http://akizukidenshi.com/catalog/g/gP-03894/)
+    - ジャンパーピンを持っていない人はこちら
+    - 秋月電子通商
 
 ## 4K@30 出るカメラの購入する
 
@@ -16,6 +31,7 @@
 
 - https://ja.aliexpress.com/item/33013268769.html
 - https://ja.aliexpress.com/item/33016603918.html
+- https://ja.aliexpress.com/item/33012473257.html
 
 色々 4K@30 が出せるカメラを試してきましたが、このカメラが一番安定しています。
 
