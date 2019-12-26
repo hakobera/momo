@@ -83,9 +83,28 @@ ARG AWS_SDK_VERSION
 COPY script/setup_aws_sdk.sh /root/
 RUN \
   set -ex \
-  && /root/setup_aws_sdk.sh "$AWS_SDK_VERSION" /root/aws-sdk-cpp-source \
-  && mkdir -p /root/aws-sdk-cpp-source/build \
+  && /root/setup_aws_sdk.sh "$AWS_SDK_VERSION" /root/aws-sdk-cpp-source
+
+#COPY aws-sdk-cpp /root/aws-sdk-cpp
+
+COPY script/cross_compile_aws_sdk_armhf.sh /root/
+RUN \
+  set -ex \
+  && /root/cross_compile_aws_sdk_armhf.sh /root/aws-sdk-cpp-source /root/aws-sdk-cpp
+
+COPY script/arm.toolchain.cmake /root/
+
+RUN mkdir -p /root/aws-sdk-cpp-source/build \
   && cd /root/aws-sdk-cpp-source/build \
-  && cmake -DBUILD_ONLY="kinesisvideo" -DBUILD_SHARED_LIBS=OFF -DCPP_STANDARD=14 -DENABLE_TESTING=OFF -DCMAKE_INSTALL_PREFIX=/root/aws-sdk-cpp ../aws-sdk-cpp \
-  && make \
+  && cmake \
+     -DCMAKE_TOOLCHAIN_FILE="/root/arm.toolchain.cmake" \
+     -DBUILD_ONLY="kinesisvideo" \
+     -DBUILD_SHARED_LIBS=OFF \
+     -DCPP_STANDARD=14 \
+     -DCMAKE_INSTALL_PREFIX=/root/aws-sdk-cpp \
+     -DCMAKE_PREFIX_PATH=/root/aws-sdk-cpp \
+     -DAUTORUN_UNIT_TESTS=OFF \
+     -DENABLE_TESTING=OFF \
+     ../source \
+  && make -j`nproc` \
   && make install

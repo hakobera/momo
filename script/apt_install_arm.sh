@@ -18,7 +18,6 @@ apt-get -y install \
   git \
   gtk+-3.0 \
   lbzip2 \
-  libcurl4-openssl-dev \
   libgtk-3-dev \
   lsb-release \
   multistrap \
@@ -26,7 +25,8 @@ apt-get -y install \
   rsync \
   sudo \
   vim \
-  xz-utils
+  xz-utils \
+  g++-arm-linux-gnueabihf
 
 # Ubuntu 18.04 で multistrap が動かない問題の修正。
 # https://github.com/volumio/Build/issues/348#issuecomment-462271607 を参照

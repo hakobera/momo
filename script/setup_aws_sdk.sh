@@ -20,13 +20,11 @@ set -ex
 
 mkdir -p $OUTPUT_DIR
 pushd $OUTPUT_DIR
-  if [ ! -e aws-sdk-cpp ]; then
-    git clone https://github.com/aws/aws-sdk-cpp.git
+  if [ ! -e aws-sdk-cpp-$AWS_SDK_VERSION.tar.gz ]; then
+    curl -L https://github.com/aws/aws-sdk-cpp/archive/$AWS_SDK_VERSION.tar.gz -o aws-sdk-cpp-$AWS_SDK_VERSION.tar.gz
   fi
-  pushd aws-sdk-cpp
-    git reset HEAD --hard
-    git checkout master
-    git pull
-    git checkout $AWS_SDK_VERSION
-  popd
+
+  rm -rf source
+  tar xvzf aws-sdk-cpp-$AWS_SDK_VERSION.tar.gz
+  mv aws-sdk-cpp-$AWS_SDK_VERSION source
 popd
