@@ -636,7 +636,7 @@ $(BUILD_ROOT)/src/%.o: src/%.mm | $(BUILD_ROOT)
 	$(CXX) $(CFLAGS) $(INCLUDES) -c $< -o $@
 
 $(BUILD_ROOT)/momo: $(OBJECTS) | $(BUILD_ROOT)
-	$(CXX) -o $(BUILD_ROOT)/momo $(OBJECTS) $(LDFLAGS)
+	$(CXX) $(LDFLAGS) -o $(BUILD_ROOT)/momo $(OBJECTS)
 
 .PHONY: momo
 momo:
