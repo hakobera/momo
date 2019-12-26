@@ -316,6 +316,11 @@ else
   BUILD_ROOT ?= _build/local
 endif
 
+# AWS SDK
+CFLAGS += -I$(AWS_SDK_ROOT)/include
+LDFLAGS += -L$(AWS_SDK_ROOT)/lib
+LDFLAGS += -laws-cpp-sdk-kinesisvideo -laws-cpp-sdk-core -laws-c-common -laws-c-event-stream -laws-checksums -lcrypto -lssl -lcurl
+
 CFLAGS += -Wno-macro-redefined -fno-lto -std=c++14 -pthread -DWEBRTC_POSIX -DOPENSSL_IS_BORINGSSL -Isrc/
 CFLAGS += -I$(WEBRTC_INCLUDE_DIR) -I$(WEBRTC_INCLUDE_DIR)/third_party/libyuv/include -I$(WEBRTC_INCLUDE_DIR)/third_party/abseil-cpp
 LDFLAGS += -L$(WEBRTC_LIBRARY_DIR) -lpthread
@@ -575,11 +580,6 @@ CFLAGS += -I$(JSON_ROOT)/include
 # CLI11
 CFLAGS += -I$(CLI11_ROOT)/include
 
-# AWS SDK
-CFLAGS += -I$(AWS_SDK_ROOT)/include
-LDFLAGS += -L$(AWS_SDK_ROOT)/lib
-LDFLAGS += -laws-cpp-sdk-kinesisvideo -laws-cpp-sdk-core -laws-c-common -laws-c-event-stream -laws-checksums -lcrypto -lssl -lcurl
-
 # パッケージ用のフラグ
 ifeq ($(BUILD_MODE),package)
   LDFLAGS += -s
@@ -636,7 +636,7 @@ $(BUILD_ROOT)/src/%.o: src/%.mm | $(BUILD_ROOT)
 	$(CXX) $(CFLAGS) $(INCLUDES) -c $< -o $@
 
 $(BUILD_ROOT)/momo: $(OBJECTS) | $(BUILD_ROOT)
-	$(CXX) $(LDFLAGS) -o $(BUILD_ROOT)/momo $(OBJECTS)
+	$(CXX) -o $(BUILD_ROOT)/momo $(OBJECTS) $(LDFLAGS)
 
 .PHONY: momo
 momo:
