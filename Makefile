@@ -578,7 +578,7 @@ CFLAGS += -I$(CLI11_ROOT)/include
 # AWS SDK
 CFLAGS += -I$(AWS_SDK_ROOT)/include
 LDFLAGS += -L$(AWS_SDK_ROOT)/lib
-LDFLAGS += -lcrypto -lssl -lcurl -laws-c-common -laws-c-event-stream -laws-checksums -laws-cpp-sdk-core -laws-cpp-sdk-kinesisvideo
+LDFLAGS += -laws-cpp-sdk-kinesisvideo -laws-cpp-sdk-core -laws-c-common -laws-c-event-stream -laws-checksums -lcrypto -lssl -lcurl
 
 # パッケージ用のフラグ
 ifeq ($(BUILD_MODE),package)
