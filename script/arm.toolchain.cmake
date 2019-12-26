@@ -1,5 +1,6 @@
 # file name: arm.toolchain.cmake
 SET(CMAKE_SYSTEM_NAME Linux)
+set(CMAKE_SYSTEM_PROCESSOR arm)
 
 # specify the cross compiler
 SET(CMAKE_C_COMPILER /usr/bin/arm-linux-gnueabihf-gcc)
