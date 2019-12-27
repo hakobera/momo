@@ -85,19 +85,17 @@ RUN \
   set -ex \
   && /root/setup_aws_sdk.sh "$AWS_SDK_VERSION" /root/aws-sdk-cpp-source
 
-#COPY aws-sdk-cpp /root/aws-sdk-cpp
+#COPY script/cross_compile_aws_sdk_armhf.sh /root/
+#RUN \
+#  set -ex \
+#  && /root/cross_compile_aws_sdk_armhf.sh /root/aws-sdk-cpp-source /root/aws-sdk-cpp
 
-COPY script/cross_compile_aws_sdk_armhf.sh /root/
-RUN \
-  set -ex \
-  && /root/cross_compile_aws_sdk_armhf.sh /root/aws-sdk-cpp-source /root/aws-sdk-cpp
-
-COPY script/arm.toolchain.cmake /root/
+COPY armv6.toolchain.cmake /root/aws-sdk-cpp-source/
 
 RUN mkdir -p /root/aws-sdk-cpp-source/build \
   && cd /root/aws-sdk-cpp-source/build \
   && cmake \
-     -DCMAKE_TOOLCHAIN_FILE="/root/arm.toolchain.cmake" \
+     -DCMAKE_TOOLCHAIN_FILE="/root/aws-sdk-cpp-source/armv6.toolchain.cmake" \
      -DBUILD_ONLY="kinesisvideo" \
      -DBUILD_SHARED_LIBS=OFF \
      -DCPP_STANDARD=14 \
