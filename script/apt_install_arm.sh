@@ -25,8 +25,8 @@ apt-get -y install \
   rsync \
   sudo \
   vim \
-  xz-utils \
-  g++-arm-linux-gnueabihf
+  xz-utils
+#  g++-arm-linux-gnueabihf
 
 # Ubuntu 18.04 で multistrap が動かない問題の修正。
 # https://github.com/volumio/Build/issues/348#issuecomment-462271607 を参照

@@ -90,17 +90,18 @@ RUN \
 #  set -ex \
 #  && /root/cross_compile_aws_sdk_armhf.sh /root/aws-sdk-cpp-source /root/aws-sdk-cpp
 
-COPY armv6.toolchain.cmake /root/aws-sdk-cpp-source/
+COPY raspbian-buster-armv6.toolchain.cmake /root/aws-sdk-cpp-source/
 
 RUN mkdir -p /root/aws-sdk-cpp-source/build \
   && cd /root/aws-sdk-cpp-source/build \
-  && cmake \
-     -DCMAKE_TOOLCHAIN_FILE="/root/aws-sdk-cpp-source/armv6.toolchain.cmake" \
+  && cmake -v \
+     -DCMAKE_FIND_DEBUG_MODE=1 \
+     -DCMAKE_TOOLCHAIN_FILE="/root/aws-sdk-cpp-source/raspbian-buster-armv6.toolchain.cmake" \
+     -DTARGET_ARCH=linux \
      -DBUILD_ONLY="kinesisvideo" \
      -DBUILD_SHARED_LIBS=OFF \
      -DCPP_STANDARD=14 \
      -DCMAKE_INSTALL_PREFIX=/root/aws-sdk-cpp \
-     -DCMAKE_PREFIX_PATH=/root/aws-sdk-cpp \
      -DAUTORUN_UNIT_TESTS=OFF \
      -DENABLE_TESTING=OFF \
      ../source \
