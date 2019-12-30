@@ -543,10 +543,6 @@ ifeq ($(TARGET_OS),macos)
     -framework MetalKit \
     -framework OpenGL
 
-  CFLAGS += -I$(AWS_SDK_ROOT)/include
-  LDFLAGS += -L$(AWS_SDK_ROOT)/lib
-  LDFLAGS += -lcurl -laws-c-common -laws-c-event-stream -laws-checksums -laws-cpp-sdk-core -laws-cpp-sdk-kinesisvideo
-
   ifeq ($(USE_SDL2),1)
     LDFLAGS += \
       -liconv \
@@ -620,7 +616,10 @@ CFLAGS += -I$(CLI11_ROOT)/include
 # AWS SDK
 CFLAGS += -I$(AWS_SDK_ROOT)/include
 LDFLAGS += -L$(AWS_SDK_ROOT)/lib
-LDFLAGS += -lcurl -laws-cpp-sdk-kinesisvideo -laws-cpp-sdk-core -laws-c-common -laws-c-event-stream -laws-checksums
+LDFLAGS += -laws-cpp-sdk-kinesisvideo -laws-cpp-sdk-core -laws-c-common -laws-c-event-stream -laws-checksums -lcurl
+ifeq ($(TARGET_OS),linux)
+  LDFLAGS += -lcrypto
+endif
 
 # パッケージ用のフラグ
 ifeq ($(BUILD_MODE),package)
