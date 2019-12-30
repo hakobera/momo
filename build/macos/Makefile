@@ -84,5 +84,5 @@ $(AWS_SDK): ../../VERSION
 	../../script/setup_aws_sdk.sh $(AWS_SDK_VERSION) $(CURDIR)/aws-sdk-cpp-source
 	rm -rf $(CURDIR)/aws-sdk-cpp-source/build
 	mkdir -p $(CURDIR)/aws-sdk-cpp-source/build
-	cd $(CURDIR)/aws-sdk-cpp-source/build && cmake -DBUILD_ONLY="kinesisvideo" -DBUILD_SHARED_LIBS=OFF -DCPP_STANDARD=14 -DENABLE_TESTING=OFF -DCMAKE_INSTALL_PREFIX=$(AWS_SDK_PREFIX) ../aws-sdk-cpp
+	cd $(CURDIR)/aws-sdk-cpp-source/build && cmake -DBUILD_ONLY="kinesisvideo" -DBUILD_SHARED_LIBS=OFF -DCPP_STANDARD=14 -DENABLE_TESTING=OFF -DCMAKE_INSTALL_PREFIX=$(AWS_SDK_PREFIX) ../source
 	cd $(CURDIR)/aws-sdk-cpp-source/build && make -j$(JOBS) && make install
