@@ -79,19 +79,22 @@ ARG CLI11_VERSION
 RUN git clone --branch v$CLI11_VERSION --depth 1 https://github.com/CLIUtils/CLI11.git /root/CLI11
 
 # AWS SDK のビルド
+
 ARG AWS_SDK_VERSION
 COPY script/setup_aws_sdk.sh /root/
 RUN \
   set -ex \
   && /root/setup_aws_sdk.sh "$AWS_SDK_VERSION" /root/aws-sdk-cpp-source
 
-#COPY script/cross_compile_aws_sdk_armhf.sh /root/
-#RUN \
-#  set -ex \
-#  && /root/cross_compile_aws_sdk_armhf.sh /root/aws-sdk-cpp-source /root/aws-sdk-cpp
+# apt で install できる CMake は古いので、公式から最新版をダウンロードしてパスを通す
+
+RUN apt remove --purge --auto-remove cmake \
+  && curl -LO https://github.com/Kitware/CMake/releases/download/v3.16.2/cmake-3.16.2-Linux-x86_64.tar.gz \
+  && tar xvzf cmake-3.16.2-Linux-x86_64.tar.gz \
+  && mv cmake-3.16.2-Linux-x86_64/ /opt/cmake/
+ENV PATH /opt/cmake/bin:$PATH
 
 COPY raspbian-buster-armv6.toolchain.cmake /root/aws-sdk-cpp-source/
-
 RUN mkdir -p /root/aws-sdk-cpp-source/build \
   && cd /root/aws-sdk-cpp-source/build \
   && cmake -v \

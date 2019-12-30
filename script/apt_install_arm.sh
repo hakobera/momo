@@ -13,7 +13,6 @@ apt-get -y install \
   binutils-arm-linux-gnueabi \
   binutils-arm-linux-gnueabihf \
   build-essential \
-  cmake \
   curl \
   git \
   gtk+-3.0 \

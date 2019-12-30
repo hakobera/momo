@@ -1,7 +1,10 @@
+# Now support only static library build
+
 set(CMAKE_SYSTEM_NAME Linux)
 set(CMAKE_SYSTEM_VERSION 1)
 set(CMAKE_SYSTEM_PROCESSOR arm)
 set(CMAKE_SYSROOT /root/rootfs)
+set(CMAKE_CROSSCOMPILING ON)
 
 #set(CMAKE_TRY_COMPILE_TARGET_TYPE "STATIC_LIBRARY")
 
@@ -44,14 +47,17 @@ set(CMAKE_CXX_FLAGS "\
  ${ARCH_OPTS}"
   CACHE STRING "CXX_FLAGS" FORCE)
 
+# For test code compile
 set(CMAKE_EXE_LINKER_FLAGS "\
  -L /root/rootfs/usr/lib/arm-linux-gnueabihf \
  -L /root/rootfs/usr/lib \
- -L /root/llvm/libcxx/lib \
- -static-libgcc \
- -static-libstdc++ \
- -lpthread"
+ -L /root/llvm/libcxx/lib"
   CACHE STRING "LINKER FLAGS" FORCE)
 
 set(THREADS_PTHREAD_ARG "0" CACHE STRING "Result from TRY_RUN" FORCE)
+set(CURL_HAS_H2_EXITCODE 0 CACHE STRING "Blah" FORCE )
+set(CURL_HAS_H2_EXITCODE__TRYRUN_OUTPUT "" CACHE STRING "Blah" FORCE)
+set(CURL_HAS_TLS_PROXY_EXITCODE 0 CACHE STRING "Blah" FORCE )
+set(CURL_HAS_TLS_PROXY_EXITCODE__TRYRUN_OUTPUT "" CACHE STRING "Blah" FORCE)
+
 #set(CMAKE_CXX_FLAGS_RELEASE "-Ofast -g0 -DNDEBUG" CACHE STRING "C++ Release Flags" FORCE)
