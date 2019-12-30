@@ -46,7 +46,11 @@ include VERSION
 #
 # WEBRTC_INCLUDE_DIR: WebRTC のインクルードディレクトリ
 #
-# WEBRTC_LIB_ROOT: WebRTC のビルドディレクトリ
+# WEBRTC_LIBRARY_DIR: WebRTC のライブラリディレクトリ
+#
+# WEBRTC_VERSION_FILE: WebRTC のバージョンファイル
+#
+# CLANG_ROOT: ビルドに使う clang コンパイラのインストール先ディレクトリ
 #
 # USE_LIBCXX: libstdc++ の代わりに libc++ を使うかどうか
 #   有効な値は 0, 1
@@ -61,6 +65,8 @@ include VERSION
 # BUILD_ROOT: ビルド用ディレクトリ。デフォルトでは ../momo-build になる。
 #
 # MOMO_VERSION: バージョン情報。設定しなければ internal-build になる
+#
+# MOMO_COMMIT_SHORT: Momo のコミットハッシュ。設定しなければ unknown になる
 #
 # MOMO_CFLAGS: C コンパイラに追加で渡すフラグ。最適化フラグやデバッグフラグを入れることを想定している。
 #
@@ -82,6 +88,8 @@ ifeq ($(PACKAGE_NAME),raspbian-buster_armv6)
   AWS_SDK_ROOT ?= /root/aws-sdk-cpp
   WEBRTC_INCLUDE_DIR ?= /root/webrtc/include
   WEBRTC_LIBRARY_DIR ?= /root/webrtc/lib
+  WEBRTC_VERSION_FILE ?= /root/webrtc/VERSIONS
+  CLANG_ROOT ?= /root/llvm/clang
   USE_LIBCXX ?= 1
   LIBCXX_INCLUDE_DIR ?= /root/llvm/libcxx/include
   SYSROOT ?= /root/rootfs
@@ -101,6 +109,8 @@ else ifeq ($(PACKAGE_NAME),raspbian-buster_armv7)
   AWS_SDK_ROOT ?= /root/aws-sdk-cpp
   WEBRTC_INCLUDE_DIR ?= /root/webrtc/include
   WEBRTC_LIBRARY_DIR ?= /root/webrtc/lib
+  WEBRTC_VERSION_FILE ?= /root/webrtc/VERSIONS
+  CLANG_ROOT ?= /root/llvm/clang
   USE_LIBCXX ?= 1
   LIBCXX_INCLUDE_DIR ?= /root/llvm/libcxx/include
   SYSROOT ?= /root/rootfs
@@ -120,6 +130,8 @@ else ifeq ($(PACKAGE_NAME),ubuntu-16.04_armv7_ros)
   AWS_SDK_ROOT ?= /root/aws-sdk-cpp
   WEBRTC_INCLUDE_DIR ?= /root/webrtc/include
   WEBRTC_LIBRARY_DIR ?= /root/webrtc/lib
+  WEBRTC_VERSION_FILE ?= /root/webrtc/VERSIONS
+  CLANG_ROOT ?= /root/llvm/clang
   USE_LIBCXX ?= 0
   SYSROOT ?= /root/rootfs
 else ifeq ($(PACKAGE_NAME),ubuntu-18.04_armv8)
@@ -138,6 +150,8 @@ else ifeq ($(PACKAGE_NAME),ubuntu-18.04_armv8)
   AWS_SDK_ROOT ?= /root/aws-sdk-cpp
   WEBRTC_INCLUDE_DIR ?= /root/webrtc/include
   WEBRTC_LIBRARY_DIR ?= /root/webrtc/lib
+  WEBRTC_VERSION_FILE ?= /root/webrtc/VERSIONS
+  CLANG_ROOT ?= /root/llvm/clang
   USE_LIBCXX ?= 1
   LIBCXX_INCLUDE_DIR ?= /root/llvm/libcxx/include
   SYSROOT ?= /root/rootfs
@@ -158,6 +172,8 @@ else ifeq ($(PACKAGE_NAME),ubuntu-18.04_armv8_jetson_nano)
   AWS_SDK_ROOT ?= /root/aws-sdk-cpp
   WEBRTC_INCLUDE_DIR ?= /root/webrtc/include
   WEBRTC_LIBRARY_DIR ?= /root/webrtc/lib
+  WEBRTC_VERSION_FILE ?= /root/webrtc/VERSIONS
+  CLANG_ROOT ?= /root/llvm/clang
   USE_LIBCXX ?= 1
   LIBCXX_INCLUDE_DIR ?= /root/llvm/libcxx/include
   SYSROOT ?= /root/rootfs
@@ -176,6 +192,8 @@ else ifeq ($(PACKAGE_NAME),ubuntu-16.04_x86_64_ros)
   AWS_SDK_ROOT ?= /root/aws-sdk-cpp
   WEBRTC_INCLUDE_DIR ?= /root/webrtc/include
   WEBRTC_LIBRARY_DIR ?= /root/webrtc/lib
+  WEBRTC_VERSION_FILE ?= /root/webrtc/VERSIONS
+  CLANG_ROOT ?= /root/llvm/clang
   USE_LIBCXX ?= 0
 else ifeq ($(PACKAGE_NAME),ubuntu-18.04_x86_64)
   TARGET_OS ?= linux
@@ -192,6 +210,8 @@ else ifeq ($(PACKAGE_NAME),ubuntu-18.04_x86_64)
   AWS_SDK_ROOT ?= /root/aws-sdk-cpp
   WEBRTC_INCLUDE_DIR ?= /root/webrtc/include
   WEBRTC_LIBRARY_DIR ?= /root/webrtc/lib
+  WEBRTC_VERSION_FILE ?= /root/webrtc/VERSIONS
+  CLANG_ROOT ?= /root/llvm/clang
   USE_LIBCXX ?= 1
   LIBCXX_INCLUDE_DIR ?= /root/llvm/libcxx/include
 else ifeq ($(PACKAGE_NAME),macos)
@@ -209,12 +229,10 @@ else ifeq ($(PACKAGE_NAME),macos)
   AWS_SDK_ROOT ?= $(CURDIR)/build/macos/aws-sdk-cpp
   WEBRTC_INCLUDE_DIR ?= $(CURDIR)/build/macos/webrtc/include
   WEBRTC_LIBRARY_DIR ?= $(CURDIR)/build/macos/webrtc/lib
+  WEBRTC_VERSION_FILE ?= $(CURDIR)/build/macos/webrtc/VERSIONS
+  CLANG_ROOT ?= $(CURDIR)/build/macos/llvm/clang
   USE_LIBCXX ?= 1
   LIBCXX_INCLUDE_DIR ?= $(CURDIR)/build/macos/llvm/libcxx/include
-
-  # depot_tools へのパスを通しておく
-  # (Docker から実行するタイプのビルドでは事前に通してあるが、こっちは通してない可能性があるので)
-  # export PATH := $(CURDIR)/build/macos/webrtc/depot_tools:$(PATH)
 else
   # 各変数がちゃんと設定されているか確認する
 
@@ -282,6 +300,11 @@ else
     HAS_ERROR = 1
   endif
 
+  ifndef CLANG_ROOT
+    $(info - CLANG_ROOT が指定されていません)
+    HAS_ERROR = 1
+  endif
+
   ifndef USE_LIBCXX
     $(info - USE_LIBCXX が指定されていません)
     HAS_ERROR = 1
@@ -327,6 +350,25 @@ LDFLAGS += -L$(WEBRTC_LIBRARY_DIR) -lpthread
 ifdef MOMO_VERSION
   CFLAGS += -DMOMO_VERSION='"$(MOMO_VERSION)"'
 endif
+ifdef MOMO_COMMIT_SHORT
+  CFLAGS += -DMOMO_COMMIT_SHORT='"$(MOMO_COMMIT_SHORT)"'
+endif
+
+# WebRTC のバージョンファイルがある場合、必要な情報を CFLAGS に追加していく
+ifdef WEBRTC_VERSION_FILE
+  WEBRTC_READABLE_VERSION = $(shell . $(WEBRTC_VERSION_FILE) && echo $$WEBRTC_READABLE_VERSION)
+  WEBRTC_COMMIT_SHORT = $(shell . $(WEBRTC_VERSION_FILE) && echo $$WEBRTC_COMMIT | cut -b 1-8)
+  WEBRTC_BUILD_VERSION = $(shell . $(WEBRTC_VERSION_FILE) && echo $$WEBRTC_BUILD_VERSION)
+endif
+ifdef WEBRTC_READABLE_VERSION
+  CFLAGS += -DWEBRTC_READABLE_VERSION='"$(WEBRTC_READABLE_VERSION)"'
+endif
+ifdef WEBRTC_COMMIT_SHORT
+  CFLAGS += -DWEBRTC_COMMIT_SHORT='"$(WEBRTC_COMMIT_SHORT)"'
+endif
+ifdef WEBRTC_BUILD_VERSION
+  CFLAGS += -DWEBRTC_BUILD_VERSION='"$(WEBRTC_BUILD_VERSION)"'
+endif
 
 ifeq ($(USE_LIBCXX),1)
   LDFLAGS += -lwebrtc
@@ -351,9 +393,11 @@ ifeq ($(TARGET_OS),linux)
   CFLAGS += -fpic
   LDFLAGS += -lX11 -lXau -lXdmcp -lxcb -lplds4 -lXext -lexpat -ldl -lnss3 -lnssutil3 -lplc4 -lnspr4 -lrt
 
-  CC = /root/llvm/clang/bin/clang
-  CXX = /root/llvm/clang/bin/clang++
-  AR = /root/llvm/clang/bin/llvm-ar
+  CC = $(CLANG_ROOT)/bin/clang
+  CXX = $(CLANG_ROOT)/bin/clang++
+  AR = $(CLANG_ROOT)/bin/llvm-ar
+
+  SOURCES += $(shell find src/v4l2_video_capturer -maxdepth 1 -name '*.cpp')
 
   ifeq ($(TARGET_ARCH),arm)
     ifeq ($(TARGET_ARCH_ARM),armv8)
@@ -392,7 +436,6 @@ ifeq ($(TARGET_OS),linux)
           -lnvrm \
           -lnvrm_graphics \
           -lnvos
-        SOURCES += $(shell find src/v4l2_video_capturer -maxdepth 1 -name '*.cpp')
         SOURCES += $(shell find src/hwenc_jetson -maxdepth 1 -name '*.cpp')
         JETSON_ADDITIONAL_SOURCES += \
           $(SYSROOT)/usr/src/nvidia/tegra_multimedia_api/samples/common/classes/NvBuffer.cpp \
@@ -466,7 +509,6 @@ ifeq ($(TARGET_OS),linux)
           -lmmal_util \
           -lmmal_vc_client \
           -lm
-        SOURCES += $(shell find src/v4l2_video_capturer -maxdepth 1 -name '*.cpp')
         SOURCES += $(shell find src/hwenc_mmal -maxdepth 1 -name '*.cpp')
       endif
     endif
@@ -474,8 +516,8 @@ ifeq ($(TARGET_OS),linux)
 endif
 
 ifeq ($(TARGET_OS),macos)
-  CC = $(CURDIR)/build/macos/llvm/clang/bin/clang
-  CXX = $(CURDIR)/build/macos/llvm/clang/bin/clang++
+  CC = $(CLANG_ROOT)/bin/clang
+  CXX = $(CLANG_ROOT)/bin/clang++
   # brew でインストールした ar コマンドを使うとエラーになるので、明示的にフルパスを指定する
   AR = /usr/bin/ar
 

@@ -11,6 +11,14 @@
 
 ## develop
 
+- [UPDATE] Momo 2020.1 にバージョンを上げる
+    - @voluntas
+- [UPDATE] Boost 1.72.0 にアップデートする
+    - @voluntas
+- [UPDATE] --video-device を Linux 全般で有効にする
+    - V4L2 capturer を使うようにした
+    - @shino
+
 ## 19.12.1
 
 - [UPDATE] libwebrtc を時前ビルドしないようにする
