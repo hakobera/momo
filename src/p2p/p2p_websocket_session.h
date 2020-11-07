@@ -12,7 +12,7 @@
 #include <boost/beast/http/string_body.hpp>
 #include <boost/system/error_code.hpp>
 
-#include "rtc/rtc_manager.h"
+#include "rtc/rtc_manager.h" 
 #include "util.h"
 #include "watchdog.h"
 #include "websocket.h"
@@ -41,6 +41,8 @@ class P2PWebsocketSession
   ~P2PWebsocketSession();
 
   void Run(boost::beast::http::request<boost::beast::http::string_body> req);
+
+  std::shared_ptr<RTCConnection> GetRTCConnection() const;
 
  private:
   void OnWatchdogExpired();

@@ -332,3 +332,12 @@ void AyameClient::DoIceConnectionStateChange(
   }
   rtc_state_ = new_state;
 }
+
+std::shared_ptr<RTCConnection> AyameClient::GetRTCConnection() const {
+  if (rtc_state_ == webrtc::PeerConnectionInterface::IceConnectionState::
+                        kIceConnectionConnected) {
+    return connection_;
+  } else {
+    return nullptr;
+  }
+}

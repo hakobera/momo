@@ -15,6 +15,7 @@
 // nlohmann/json
 #include <nlohmann/json.hpp>
 
+#include "rtc/rtc_client.h"
 #include "rtc/rtc_manager.h"
 #include "rtc/rtc_message_sender.h"
 #include "url_parts.h"
@@ -42,7 +43,8 @@ struct SoraClientConfig {
 };
 
 class SoraClient : public std::enable_shared_from_this<SoraClient>,
-                   public RTCMessageSender {
+                   public RTCMessageSender,
+                   public RTCClient {
   SoraClient(boost::asio::io_context& ioc,
              RTCManager* manager,
              SoraClientConfig config);
@@ -62,7 +64,7 @@ class SoraClient : public std::enable_shared_from_this<SoraClient>,
 
   webrtc::PeerConnectionInterface::IceConnectionState GetRTCConnectionState()
       const;
-  std::shared_ptr<RTCConnection> GetRTCConnection() const;
+  std::shared_ptr<RTCConnection> GetRTCConnection() const override;
 
  private:
   void ReconnectAfter();
