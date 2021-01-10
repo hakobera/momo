@@ -64,6 +64,13 @@ MomoVideoEncoderFactory::GetSupportedFormats() const {
   if (vp8_encoder_ == VideoCodecInfo::Type::Software ||
       vp8_encoder_ == VideoCodecInfo::Type::Jetson) {
     supported_codecs.push_back(webrtc::SdpVideoFormat(cricket::kVp8CodecName));
+  } else if (vp8_encoder_ == VideoCodecInfo::Type::VideoToolbox) {
+    // VideoToolbox の場合は video_decoder_factory_ から VP8 を拾ってくる
+    for (auto format : video_encoder_factory_->GetSupportedFormats()) {
+      if (absl::EqualsIgnoreCase(format.name, cricket::kVp8CodecName)) {
+        supported_codecs.push_back(format);
+      }
+    }
   }
 
   // VP9
@@ -78,6 +85,13 @@ MomoVideoEncoderFactory::GetSupportedFormats() const {
         {{webrtc::kVP9FmtpProfileId,
           webrtc::VP9ProfileToString(webrtc::VP9Profile::kProfile0)}}));
 #endif
+  } else if (vp9_encoder_ == VideoCodecInfo::Type::VideoToolbox) {
+    // VideoToolbox の場合は video_decoder_factory_ から VP9 を拾ってくる
+    for (auto format : video_encoder_factory_->GetSupportedFormats()) {
+      if (absl::EqualsIgnoreCase(format.name, cricket::kVp9CodecName)) {
+        supported_codecs.push_back(format);
+      }
+    }
   }
 
   // AV1
@@ -167,6 +181,14 @@ MomoVideoEncoderFactory::CreateVideoEncoder(
         return webrtc::VP8Encoder::Create();
       });
     }
+#if defined(__APPLE__)
+    if (vp8_encoder_ == VideoCodecInfo::Type::VideoToolbox) {
+      return WithSimulcast(
+          format, [this](const webrtc::SdpVideoFormat& format) {
+            return video_encoder_factory_->CreateVideoEncoder(format);
+          });
+    }
+#endif
 #if USE_JETSON_ENCODER
     if (vp8_encoder_ == VideoCodecInfo::Type::Jetson) {
       return WithSimulcast(format, [](const webrtc::SdpVideoFormat& format) {
@@ -183,6 +205,14 @@ MomoVideoEncoderFactory::CreateVideoEncoder(
         return webrtc::VP9Encoder::Create(cricket::VideoCodec(format));
       });
     }
+#if defined(__APPLE__)
+    if (vp9_encoder_ == VideoCodecInfo::Type::VideoToolbox) {
+      return WithSimulcast(
+          format, [this](const webrtc::SdpVideoFormat& format) {
+            return video_encoder_factory_->CreateVideoEncoder(format);
+          });
+    }
+#endif
 #if USE_JETSON_ENCODER
     if (vp9_encoder_ == VideoCodecInfo::Type::Jetson) {
       return WithSimulcast(format, [](const webrtc::SdpVideoFormat& format) {

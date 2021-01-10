@@ -14,6 +14,10 @@
 #include "hwenc_jetson/jetson_video_encoder.h"
 #endif
 
+#if defined(__APPLE__)
+#include "mac_helper/macos_version.h"
+#endif
+
 struct VideoCodecInfo {
   enum class Type {
     Default,
@@ -123,13 +127,21 @@ struct VideoCodecInfo {
 
     info.h264_encoders.push_back(Type::VideoToolbox);
     info.h264_decoders.push_back(Type::VideoToolbox);
-    info.vp8_encoders.push_back(Type::Software);
-    info.vp9_encoders.push_back(Type::Software);
-    info.vp8_decoders.push_back(Type::Software);
-    info.vp9_decoders.push_back(Type::Software);
+
+    if (MacosVersion::GetArch() == "arm64") {
+      info.vp8_encoders.push_back(Type::VideoToolbox);
+      info.vp9_encoders.push_back(Type::VideoToolbox);
+      info.vp8_decoders.push_back(Type::VideoToolbox);
+      info.vp9_decoders.push_back(Type::VideoToolbox);
+    } else {
+      info.vp8_encoders.push_back(Type::Software);
+      info.vp9_encoders.push_back(Type::Software);
+      info.vp8_decoders.push_back(Type::Software);
+      info.vp9_decoders.push_back(Type::Software);
+    }
+    
     info.av1_encoders.push_back(Type::Software);
     info.av1_decoders.push_back(Type::Software);
-
     return info;
   }
 

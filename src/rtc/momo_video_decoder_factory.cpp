@@ -65,6 +65,13 @@ MomoVideoDecoderFactory::GetSupportedFormats() const {
   if (vp8_decoder_ == VideoCodecInfo::Type::Software ||
       vp9_decoder_ == VideoCodecInfo::Type::Jetson) {
     supported_codecs.push_back(webrtc::SdpVideoFormat(cricket::kVp8CodecName));
+  } else if (vp8_decoder_ == VideoCodecInfo::Type::VideoToolbox) {
+    // VideoToolbox の場合は video_decoder_factory_ から VP8 を拾ってくる
+    for (auto format : video_decoder_factory_->GetSupportedFormats()) {
+      if (absl::EqualsIgnoreCase(format.name, cricket::kVp8CodecName)) {
+        supported_codecs.push_back(format);
+      }
+    }
   }
 
   // VP9
@@ -72,6 +79,13 @@ MomoVideoDecoderFactory::GetSupportedFormats() const {
       vp9_decoder_ == VideoCodecInfo::Type::Jetson) {
     for (const webrtc::SdpVideoFormat& format : webrtc::SupportedVP9Codecs()) {
       supported_codecs.push_back(format);
+    }
+  } else if (vp9_decoder_ == VideoCodecInfo::Type::VideoToolbox) {
+    // VideoToolbox の場合は video_decoder_factory_ から VP9 を拾ってくる
+    for (auto format : video_decoder_factory_->GetSupportedFormats()) {
+      if (absl::EqualsIgnoreCase(format.name, cricket::kVp9CodecName)) {
+        supported_codecs.push_back(format);
+      }
     }
   }
 

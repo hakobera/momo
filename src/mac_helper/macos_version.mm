@@ -88,3 +88,13 @@ std::string MacosVersion::GetOSVersion() {
   NSString* str = NSProcessInfo.processInfo.operatingSystemVersionString;
   return [str UTF8String];
 }
+
+std::string MacosVersion::GetArch() {
+#if TARGET_CPU_ARM64
+  return "arm64";
+#elif TARGET_CPU_X86_64
+  return "x86_64";
+#else
+  return "Unknown Arch"
+#endif
+}
