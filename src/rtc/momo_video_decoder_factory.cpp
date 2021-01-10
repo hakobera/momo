@@ -65,13 +65,6 @@ MomoVideoDecoderFactory::GetSupportedFormats() const {
   if (vp8_decoder_ == VideoCodecInfo::Type::Software ||
       vp9_decoder_ == VideoCodecInfo::Type::Jetson) {
     supported_codecs.push_back(webrtc::SdpVideoFormat(cricket::kVp8CodecName));
-  } else if (vp8_decoder_ == VideoCodecInfo::Type::VideoToolbox) {
-    // VideoToolbox の場合は video_decoder_factory_ から VP8 を拾ってくる
-    for (auto format : video_decoder_factory_->GetSupportedFormats()) {
-      if (absl::EqualsIgnoreCase(format.name, cricket::kVp8CodecName)) {
-        supported_codecs.push_back(format);
-      }
-    }
   }
 
   // VP9
@@ -145,6 +138,12 @@ MomoVideoDecoderFactory::CreateVideoDecoder(
   }
 
   if (absl::EqualsIgnoreCase(format.name, cricket::kVp9CodecName)) {
+#if defined(__APPLE__)
+    if (vp9_decoder_ == VideoCodecInfo::Type::VideoToolbox) {
+      return video_decoder_factory_->CreateVideoDecoder(format);
+    }
+#endif
+
 #if USE_JETSON_ENCODER
     if (vp9_decoder_ == VideoCodecInfo::Type::Jetson) {
       return std::unique_ptr<webrtc::VideoDecoder>(

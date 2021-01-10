@@ -7,7 +7,6 @@ class MacosVersion {
  public:
   static std::string GetOSName();
   static std::string GetOSVersion();
-  static std::string GetArch();
 };
 
 #endif  // MACOS_VERSION_H_
