@@ -41,6 +41,34 @@ SDLRenderer::SDLRenderer(int width, int height, bool fullscreen)
     SetFullScreen(true);
   }
 
+  int numRenderDrivers = SDL_GetNumRenderDrivers();
+  if (numRenderDrivers < 0) {
+    RTC_LOG(LS_ERROR) << __FUNCTION__ << ": SDL_GetNumRenderDrivers failed " << SDL_GetError();
+    return;
+  }
+
+  SDL_RendererInfo info;
+  for (int i = 0; i < numRenderDrivers; i++) {
+    if (SDL_GetRenderDriverInfo(i, &info) < 0) {
+      RTC_LOG(LS_ERROR) << __FUNCTION__ << ": SDL_GetRenderDriverInfo(" << i << ") failed " << SDL_GetError();
+      return;
+    }
+    RTC_LOG(LS_INFO) << "SDL renderer found: [" << i << "] name=" << info.name << " flags=" << info.flags;
+  }
+
+  renderer_ = SDL_CreateRenderer(window_, -1, SDL_RENDERER_ACCELERATED);
+  if (renderer_ == nullptr) {
+    RTC_LOG(LS_ERROR) << __FUNCTION__ << ": SDL_CreateRenderer failed "
+                      << SDL_GetError();
+    return;
+  }
+  
+  if (SDL_GetRendererInfo(renderer_, &info) < 0) {
+    RTC_LOG(LS_ERROR) << __FUNCTION__ << ": SDL_GetRendererInfo failed " << SDL_GetError();
+    return;
+  }
+  RTC_LOG(LS_INFO) << "selected SDL Renderer name=" << info.name << " flags=" << info.flags;
+
   thread_ = SDL_CreateThread(SDLRenderer::RenderThreadExec, "Render", this);
 }
 
@@ -106,12 +134,6 @@ int SDLRenderer::RenderThreadExec(void* data) {
 }
 
 int SDLRenderer::RenderThread() {
-  renderer_ = SDL_CreateRenderer(window_, -1, SDL_RENDERER_ACCELERATED);
-  if (renderer_ == nullptr) {
-    RTC_LOG(LS_ERROR) << __FUNCTION__ << ": SDL_CreateRenderer failed "
-                      << SDL_GetError();
-    return 1;
-  }
   SDL_SetRenderDrawColor(renderer_, 0, 0, 0, 255);
 
   uint32_t start_time, duration;
