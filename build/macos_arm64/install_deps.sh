@@ -136,7 +136,7 @@ if [ $SDL2_CHANGED -eq 1 -o ! -e $INSTALL_DIR/SDL2/lib/libSDL2.a ]; then
     SYSROOT="`xcrun --sdk macosx --show-sdk-path`"
     CC="$INSTALL_DIR/llvm/clang/bin/clang -target aarch64-apple-darwin -arch arm64 -mmacosx-version-min=11.0 --sysroot=$SYSROOT" \
       CXX="$INSTALL_DIR/llvm/clang/bin/clang++ -target aarch64-apple-darwin -arch arm64 -mmacosx-version-min=11.0 --sysroot=$SYSROOT -nostdinc++ -isystem $INSTALL_DIR/llvm/libcxx/include" \
-      $SOURCE_DIR/SDL2/source/configure --host=aarch64-apple-darwin --disable-video-opengl --disable-shared --prefix=$INSTALL_DIR/SDL2
+      $SOURCE_DIR/SDL2/source/configure --host=aarch64-apple-darwin --disable-shared --prefix=$INSTALL_DIR/SDL2
     make -j$JOBS
     make install
   popd
