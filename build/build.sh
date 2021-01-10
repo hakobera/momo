@@ -128,10 +128,10 @@ case "$PACKAGE" in
         rm -rf _package/momo-${MOMO_VERSION}_${PACKAGE}-${MACOS_VERSION}
         rm -f _package/momo-${MOMO_VERSION}_${PACKAGE}-${MACOS_VERSION}.tar.gz
         mkdir -p _package/momo-${MOMO_VERSION}_${PACKAGE}-${MACOS_VERSION}
-        cp    _build/macos/momo _package/momo-${MOMO_VERSION}_${PACKAGE}-${MACOS_VERSION}/
-        cp    LICENSE           _package/momo-${MOMO_VERSION}_${PACKAGE}-${MACOS_VERSION}/
-        cp    NOTICE            _package/momo-${MOMO_VERSION}_${PACKAGE}-${MACOS_VERSION}/
-        cp -r html              _package/momo-${MOMO_VERSION}_${PACKAGE}-${MACOS_VERSION}/html
+        cp    _build/${PACKAGE}/momo _package/momo-${MOMO_VERSION}_${PACKAGE}-${MACOS_VERSION}/
+        cp    LICENSE                _package/momo-${MOMO_VERSION}_${PACKAGE}-${MACOS_VERSION}/
+        cp    NOTICE                 _package/momo-${MOMO_VERSION}_${PACKAGE}-${MACOS_VERSION}/
+        cp -r html                   _package/momo-${MOMO_VERSION}_${PACKAGE}-${MACOS_VERSION}/html
         pushd _package
           tar czf momo-${MOMO_VERSION}_${PACKAGE}-${MACOS_VERSION}.tar.gz momo-${MOMO_VERSION}_${PACKAGE}-${MACOS_VERSION}
         popd
