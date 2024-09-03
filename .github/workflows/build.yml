@@ -190,10 +190,10 @@ jobs:
           - ubuntu-18.04_x86_64
           - ubuntu-20.04_x86_64
     steps:
-      - uses: actions/download-artifact@v1
+      - uses: actions/download-artifact@v4.1.7
         with:
           name: ${{ matrix.name }}.env
-      - uses: actions/download-artifact@v1
+      - uses: actions/download-artifact@v4.1.7
         with:
           name: create-release.env
       - name: Env to output
@@ -205,7 +205,7 @@ jobs:
           echo "::set-output name=content_type::$CONTENT_TYPE"
           echo "::set-output name=upload_url::$UPLOAD_URL"
         id: env
-      - uses: actions/download-artifact@v1
+      - uses: actions/download-artifact@v4.1.7
         with:
           name: ${{ steps.env.outputs.package_name }}
       - name: Upload ${{ matrix.name }} Release Asset
